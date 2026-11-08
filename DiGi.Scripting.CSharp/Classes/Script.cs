@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -101,7 +102,7 @@ namespace DiGi.Scripting.CSharp.Classes
             IEnumerable<VariableType>? outputVariableTypes = OutputVariableTypes;
 
             Data inputData_Temp = [];
-            if (inputData != null && inputData.Count() != 0)
+            if (inputData != null && inputData.Count != 0)
             {
                 Dictionary<string, object?> dictionary = [];
                 foreach (KeyValuePair<string, object?> input in inputData)
@@ -125,7 +126,7 @@ namespace DiGi.Scripting.CSharp.Classes
                             continue;
                         }
 
-                        code = code?.Replace(string.Format("[{0}]", name), string.Format(@"Dictionary[""{0}""]", name));
+                        code = code?.Replace(string.Format(CultureInfo.CurrentCulture, "[{0}]", name), string.Format(CultureInfo.CurrentCulture, @"Dictionary[""{0}""]", name));
                         inputData_Temp[name!] = value;
                     }
                 }
@@ -151,7 +152,9 @@ namespace DiGi.Scripting.CSharp.Classes
                 {
                     if (diagnostic.Severity == DiagnosticSeverity.Error)
                     {
-                        return new Response(new CompileException(diagnostic.GetMessage()));
+#pragma warning disable CA1305 // Roslyn picks the message resource by this culture; the default (null) is CurrentUICulture
+                        return new Response(new CompileException(diagnostic.GetMessage(CultureInfo.CurrentUICulture)));
+#pragma warning restore CA1305
                     }
                 }
             }
@@ -173,7 +176,7 @@ namespace DiGi.Scripting.CSharp.Classes
             }
 
             List<Output>? outputs = null;
-            if (outputVariableTypes != null && outputVariableTypes.Count() != 0)
+            if (outputVariableTypes != null && outputVariableTypes.Any())
             {
                 outputs ??= [];
 
